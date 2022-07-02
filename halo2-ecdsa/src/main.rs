@@ -207,7 +207,78 @@ fn run<C: CurveAffine, N: FieldExt>() {
     assert_eq!(prover.verify(), Ok(()));
 }
 
+#[cfg(feature = "dev-graph")]
+fn plot<C: CurveAffine, N: FieldExt>() {
+    println!("Run plot");
+    let g = C::generator();
+
+    // Generate a key pair
+    let sk = <C as CurveAffine>::ScalarExt::random(OsRng);
+    let public_key = (g * sk).to_affine();
+
+    println!("Public key {:?}", public_key);
+
+    // Generate a valid signature
+    // Suppose `m_hash` is the message hash
+    let msg_hash = <C as CurveAffine>::ScalarExt::random(OsRng);
+
+    println!("Msg hash{:?}", msg_hash);
+
+    // Draw arandomness
+    let k = <C as CurveAffine>::ScalarExt::random(OsRng);
+    let k_inv = k.invert().unwrap();
+
+    // Calculate `r`
+    let r_point = (g * k).to_affine().coordinates().unwrap();
+    let x = r_point.x();
+    let r = mod_n::<C>(*x);
+
+    // Calculate `s`
+    let s = k_inv * (msg_hash + (r * sk));
+
+    println!("r {:?}, s {:?}", r, s);
+
+    // Sanity check. Ensure we construct a valid signature. So lets verify it
+    {
+        let s_inv = s.invert().unwrap();
+        let u_1 = msg_hash * s_inv;
+        let u_2 = r * s_inv;
+        let r_point = ((g * u_1) + (public_key * u_2))
+            .to_affine()
+            .coordinates()
+            .unwrap();
+        let x_candidate = r_point.x();
+        let r_candidate = mod_n::<C>(*x_candidate);
+        assert_eq!(r, r_candidate);
+    }
+
+    // What is k?
+    let k = 20;
+    let aux_generator = C::CurveExt::random(OsRng).to_affine();
+    let circuit = TestCircuitEcdsaVerify::<C, N> {
+        public_key: Value::known(public_key),
+        signature: Value::known((r, s)),
+        msg_hash: Value::known(msg_hash),
+        aux_generator,
+        window_size: 2,
+        _marker: PhantomData,
+    };
+
+    use plotters::prelude::*;
+
+    let root = BitMapBackend::new("ecdsa-layout.png", (1024, 3096)).into_drawing_area();
+    root.fill(&WHITE).unwrap();
+    let root = root.titled("ECDSA Layout", ("sans-serif", 60)).unwrap();
+
+    halo2_proofs::dev::CircuitLayout::default()
+        .render(20, &circuit, &root)
+        .unwrap();
+}
+
 fn main() {
+    #[cfg(feature = "dev-graph")]
+    plot::<Secp256k1, BnScalar>();
+
     println!("Run ECDSA verify");
     run::<Secp256k1, BnScalar>();
 
