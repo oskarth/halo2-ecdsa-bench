@@ -8,6 +8,12 @@ edition = "2021"
 [dependencies]
 halo2_proofs = { package = "halo2_proofs", git = "https://github.com/privacy-scaling-explorations/halo2", branch = "abstraction", version = "0.1.0-beta.1"}
 ecdsa = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", rev="e526385df49662196917ea9c2e1cd175ae229342" }
+maingate = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", rev="e526385df49662196917ea9c2e1cd175ae229342" }
+ecc = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", rev="e526385df49662196917ea9c2e1cd175ae229342" }
+integer = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", rev="e526385df49662196917ea9c2e1cd175ae229342" }
+halo2wrong = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", rev="e526385df49662196917ea9c2e1cd175ae229342" }
 # Problem when adding kzg feature flag - removed?
 # { ... features = ["kzg"] }
 #ecdsa = { git = "https://github.com/privacy-scaling-explorations/halo2wrong", tag = "v2022_06_03", features = ["kzg"] }
+group = "0.12"
+rand_core = { version = "0.6", default-features = false }
